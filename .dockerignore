@@ -1,0 +1,34 @@
+# ── Build output ──────────────────────────────────────────────────────────────
+target/
+*.jar
+*.war
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Docker files (don't send back into the build context) ────────────────────
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# ── Secrets (never bake into image) ──────────────────────────────────────────
+.env
+nginx/ssl/server.crt
+nginx/ssl/server.key
+
+# ── Test + monitoring config (not needed inside the app image) ────────────────
+k6/
+nginx/
+postgres/
+grafana/
+prometheus.yml
+grafana-dashboard.json
+README.md

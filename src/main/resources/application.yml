@@ -1,0 +1,168 @@
+spring:
+  application:
+    name: ticketing-system
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ticketing_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: ticketing-pool
+      micrometer:
+        includes-query-parameters: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: public
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: 86400000        # 24 hours
+  refresh-expiration-ms: 604800000  # 7 days
+
+ticketing:
+  seat-hold:
+    ttl-minutes: 15
+  scheduler:
+    expiry-interval-ms: 30000   # every 30 seconds
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      stripe:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      paypal:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+  retry:
+    instances:
+      stripe:
+        maxAttempts: 3
+        waitDuration: 1s
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+          - com.ticketing.exception.PaymentRetryableException
+        ignoreExceptions:
+          - com.ticketing.exception.PaymentDeclinedException
+      paypal:
+        maxAttempts: 3
+        waitDuration: 1s
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+          - com.ticketing.exception.PaymentRetryableException
+        ignoreExceptions:
+          - com.ticketing.exception.PaymentDeclinedException
+
+  timelimiter:
+    instances:
+      stripe:
+        timeoutDuration: 10s
+        cancelRunningFuture: true
+      paypal:
+        timeoutDuration: 10s
+        cancelRunningFuture: true
+
+payment:
+  stripe:
+    api-key: ${STRIPE_API_KEY}
+    base-url: https://api.stripe.com/v1
+  paypal:
+    client-id: ${PAYPAL_CLIENT_ID}
+    client-secret: ${PAYPAL_CLIENT_SECRET}
+    base-url: https://api-m.sandbox.paypal.com
+
+logging:
+  level:
+    com.ticketing: DEBUG
+    org.springframework.security: INFO
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+
+  otlp:
+    tracing:
+      endpoint: http://tempo:4318/v1/traces
+
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ticketing-system
+      environment: ${SPRING_PROFILES_ACTIVE:local}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        payment.duration: true
+        db.query.duration: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+        payment.duration: 0.5, 0.95, 0.99
+        db.query.duration: 0.5, 0.95, 0.99
+      slo:
+        http.server.requests: 100ms, 250ms, 500ms, 1s, 2s, 5s
+        payment.duration: 500ms, 1s, 2s, 5s, 10s
+        db.query.duration: 5ms,   10ms, 50ms, 100ms, 500ms
+    enable:
+      jvm: true
+      process: true
+      system: true
+      hikaricp: true
+      logback: true
+      tomcat: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+    display-request-duration: true
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  show-actuator: false

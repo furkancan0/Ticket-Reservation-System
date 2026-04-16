@@ -1,0 +1,105 @@
+
+groups:
+  - name: ticketing.alerts
+    interval: 15s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[2m]))
+            /
+            sum(rate(http_server_requests_seconds_count[2m])) > 0
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx error rate ({{ $value | humanizePercentage }})"
+          description: >
+            {{ $value | humanizePercentage }} of all HTTP requests are returning
+            5xx errors over the last 2 minutes. Investigate application logs
+            immediately. Current error rate: {{ $value | humanizePercentage }}.
+          runbook: "Check: docker compose logs app | grep ERROR"
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 HTTP latency is {{ $value | humanizeDuration }} (> 2s)"
+          description: >
+            The 95th percentile HTTP response time has been above 2 seconds
+            for 5 consecutive minutes. Current p95: {{ $value | humanizeDuration }}.
+            Check for slow DB queries, payment gateway timeouts, or GC pressure.
+          runbook: "Check: db_query_duration_seconds p99, payment_duration_seconds p99"
+
+      - alert: PaymentFailureSpike
+        expr: |
+          (
+            rate(ticket_purchase_failed_count_total[5m])
+            /
+            (
+              rate(ticket_purchase_success_count_total[5m])
+              + rate(ticket_purchase_failed_count_total[5m])
+            ) > 0
+          ) > 0.20
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Payment failure rate is {{ $value | humanizePercentage }} (> 20%)"
+          description: >
+            {{ $value | humanizePercentage }} of payment attempts are failing
+            over the last 5 minutes. This may indicate a payment gateway outage
+            (Stripe/PayPal), invalid API credentials, or a circuit breaker open state.
+            Check payment_duration_seconds for timeout patterns.
+          runbook: "Check circuit breaker state, payment gateway status pages, API key expiry"
+
+      - alert: DatabaseConnectionPoolHigh
+        expr: |
+          (
+            hikaricp_connections_active{pool=~".+"}
+            /
+            hikaricp_connections_max{pool=~".+"}
+          ) > 0.80
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DB connection pool {{ $labels.pool }} is {{ $value | humanizePercentage }} full"
+          description: >
+            The HikariCP connection pool '{{ $labels.pool }}' has been above 80%
+            utilisation for 3 minutes. Current usage: {{ $value | humanizePercentage }}.
+            If this continues, new requests will queue and eventually time out (30 s).
+            Consider increasing maximum-pool-size or investigating slow queries holding connections.
+          runbook: "Check: db_query_duration_seconds for long-running queries, look for lock waits"
+
+
+      - alert: SeatHoldNoPurchase
+        expr: |
+          (
+            rate(seat_hold_count_total[10m]) > 0.016
+          )
+          and
+          (
+            rate(seat_hold_count_total[10m])
+            /
+            (rate(seat_purchase_count_total[10m]) + 0.001)
+          ) > 3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Seat holds are {{ $value | humanize }}x higher than purchases"
+          description: >
+            The hold-to-purchase ratio has been above 3:1 for 10 minutes.
+            Holds are being created but not converting to completed purchases.
+            This may indicate a broken checkout flow, a payment gateway outage,
+            or abnormal hold behaviour (scalper bots).
+            Current ratio: {{ $value | humanize }} holds per purchase.
+          runbook: "Check checkout.completed.count, PaymentFailureSpike alert, and hold expiry rate"

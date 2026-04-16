@@ -1,0 +1,25 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: ticketing-monitor
+
+rule_files:
+  - ticketing_alerts.yml
+
+scrape_configs:
+  - job_name: 'ticketing-app'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s
+    dns_sd_configs:
+      - names: ['app']
+        type: 'A'
+        port: 8080
+
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.+):8080'
+        target_label: instance
+        replacement: 'ticketing-app-$1'
+      - target_label: service
+        replacement: ticketing

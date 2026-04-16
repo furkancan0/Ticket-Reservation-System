@@ -1,0 +1,21 @@
+# Maven
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Docker secrets
+.env
+nginx/ssl/server.crt
+nginx/ssl/server.key
+
+# Logs
+*.log
+nginx_logs/
+
+# OS
+.DS_Store
+Thumbs.db

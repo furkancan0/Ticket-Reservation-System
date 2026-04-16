@@ -1,0 +1,402 @@
+{
+  "title": "TicketHub — Operations Dashboard",
+  "uid":   "tickethub-ops",
+  "schemaVersion": 38,
+  "tags": ["ticketing", "operations"],
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+
+    {
+      "id": 1,
+      "title": "✅ Tickets Sold (success)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "fixedColor": "green", "mode": "fixed" } } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+        "expr": "increase(ticket_purchase_success_count_total[24h])",
+        "legendFormat": "Today"
+      }]
+    },
+
+    {
+      "id": 2,
+      "title": "❌ Tickets Failed",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "fixedColor": "red", "mode": "fixed" } } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+        "expr": "increase(ticket_purchase_failed_count_total[24h])",
+        "legendFormat": "Failed today"
+      }]
+    },
+
+    {
+      "id": 3,
+      "title": "🎟 Seats Purchased",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+        "expr": "increase(seat_purchase_count_total[24h])",
+        "legendFormat": "Seats sold today"
+      }]
+    },
+
+    {
+      "id": 4,
+      "title": "🔒 Active Holds",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "fieldConfig": {
+        "defaults": { "unit": "short",
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 10 },
+            { "color": "red", "value": 50 }
+          ]}
+        }
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+        "expr": "seat_hold_active_count",
+        "legendFormat": "Active holds"
+      }]
+    },
+
+    {
+      "id": 5,
+      "title": "⚠️ Exceptions (last 1h)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "fieldConfig": {
+        "defaults": { "unit": "short",
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 1 },
+            { "color": "red", "value": 10 }
+          ]}
+        }
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+        "expr": "increase(exception_count_total[1h])",
+        "legendFormat": "Exceptions"
+      }]
+    },
+
+    {
+      "id": 6,
+      "title": "💻 CPU Usage",
+      "type": "stat",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit",
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 0.6 },
+            { "color": "red", "value": 0.85 }
+          ]}
+        }
+      },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+        "expr": "system_cpu_usage",
+        "legendFormat": "CPU"
+      }]
+    },
+
+    {
+      "id": 7,
+      "title": "Checkout Funnel — started vs completed",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 7 },
+      "description": "checkout.started.count vs checkout.completed.count — gap shows abandoned checkouts",
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 10 } } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "rate(checkout_started_count_total[2m])",
+          "legendFormat": "Checkout started/s"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "rate(checkout_completed_count_total[2m])",
+          "legendFormat": "Checkout completed/s"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "rate(ticket_purchase_success_count_total[2m])",
+          "legendFormat": "Purchase success/s"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "rate(ticket_purchase_failed_count_total[2m])",
+          "legendFormat": "Purchase failed/s"
+        }
+      ]
+    },
+
+    {
+      "id": 8,
+      "title": "HTTP Request Rate & Error Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 7 },
+      "description": "http.server.requests.count and http.server.requests{status=5xx}",
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "sum(rate(http_server_requests_seconds_count[2m]))",
+          "legendFormat": "Total req/s"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[2m]))",
+          "legendFormat": "5xx errors/s"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[2m]))",
+          "legendFormat": "4xx errors/s"
+        }
+      ]
+    },
+
+    {
+      "id": 9,
+      "title": "HTTP Latency Percentiles (http.server.requests.duration)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 11, "w": 12, "h": 7 },
+      "description": "http.server.requests.duration — p50/p95/p99 per endpoint",
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "lineWidth": 2 } } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))",
+          "legendFormat": "p50 {{uri}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))",
+          "legendFormat": "p95 {{uri}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))",
+          "legendFormat": "p99 {{uri}}"
+        }
+      ]
+    },
+
+    {
+      "id": 10,
+      "title": "DB Query Duration (db.query.duration)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 11, "w": 12, "h": 7 },
+      "description": "db.query.duration by operation (find_seat_lock, find_active_hold, save_order, ...)",
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le, operation))",
+          "legendFormat": "p95 {{operation}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.99, sum(rate(db_query_duration_seconds_bucket[5m])) by (le, operation))",
+          "legendFormat": "p99 {{operation}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Payment Duration (payment.duration)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 18, "w": 12, "h": 7 },
+      "description": "payment.duration — time waiting for Stripe/PayPal, by provider and result",
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.50, sum(rate(payment_duration_seconds_bucket[5m])) by (le, provider))",
+          "legendFormat": "p50 {{provider}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.95, sum(rate(payment_duration_seconds_bucket[5m])) by (le, provider))",
+          "legendFormat": "p95 {{provider}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "histogram_quantile(0.99, sum(rate(payment_duration_seconds_bucket[5m])) by (le, provider))",
+          "legendFormat": "p99 {{provider}}"
+        }
+      ]
+    },
+
+    {
+      "id": 12,
+      "title": "DB Connection Pool (db.connection.pool.usage → hikaricp)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 18, "w": 12, "h": 7 },
+      "description": "hikaricp_connections — active, pending, idle, max. Maps to db.connection.pool.usage",
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "hikaricp_connections_active{pool=~\".+\"}",
+          "legendFormat": "Active"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "hikaricp_connections_pending{pool=~\".+\"}",
+          "legendFormat": "Pending"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "hikaricp_connections_idle{pool=~\".+\"}",
+          "legendFormat": "Idle"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "hikaricp_connections_max{pool=~\".+\"}",
+          "legendFormat": "Max"
+        }
+      ]
+    },
+
+    {
+      "id": 13,
+      "title": "JVM Memory (jvm.memory.used)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 25, "w": 12, "h": 7 },
+      "description": "jvm.memory.used — heap and non-heap. Watch for steady upward trend (leak indicator)",
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "jvm_memory_used_bytes{area=\"heap\"}",
+          "legendFormat": "Heap used"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "jvm_memory_committed_bytes{area=\"heap\"}",
+          "legendFormat": "Heap committed"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "jvm_memory_max_bytes{area=\"heap\"}",
+          "legendFormat": "Heap max"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "jvm_memory_used_bytes{area=\"nonheap\"}",
+          "legendFormat": "Non-heap used"
+        }
+      ]
+    },
+
+    {
+      "id": 14,
+      "title": "CPU & Threads (system.cpu.usage)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 25, "w": 12, "h": 7 },
+      "description": "system.cpu.usage and JVM thread counts",
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit" },
+        "overrides": [{
+          "matcher": { "id": "byName", "options": "Threads" },
+          "properties": [{ "id": "unit", "value": "short" }]
+        }]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "system_cpu_usage",
+          "legendFormat": "System CPU"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "process_cpu_usage",
+          "legendFormat": "Process CPU"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "jvm_threads_live_threads",
+          "legendFormat": "Threads"
+        }
+      ]
+    },
+
+    {
+      "id": 15,
+      "title": "Seat Hold Lifecycle",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 7 },
+      "description": "seat.hold.count vs seat.hold.expired.count — high expired rate means users aren't completing checkout",
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "rate(seat_hold_count_total[2m])",
+          "legendFormat": "Holds created/s"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "rate(seat_hold_expired_count_total[2m])",
+          "legendFormat": "Holds expired/s"
+        }
+      ]
+    },
+
+    {
+      "id": 16,
+      "title": "Exception Breakdown",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 7 },
+      "description": "exception.count by exception type",
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [{
+        "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+        "expr": "rate(exception_count_total[2m])",
+        "legendFormat": "{{type}}"
+      }]
+    },
+
+    {
+      "id": 17,
+      "title": "NGINX — Connections & Requests",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 39, "w": 24, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "nginx_connections_active",
+          "legendFormat": "Active connections"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "nginx_connections_waiting",
+          "legendFormat": "Waiting"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-ticketing" },
+          "expr": "rate(nginx_http_requests_total[1m])",
+          "legendFormat": "Requests/s"
+        }
+      ]
+    }
+  ]
+}
