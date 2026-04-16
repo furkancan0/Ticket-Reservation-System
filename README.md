@@ -46,24 +46,23 @@ replaying the same token always returns `HoldNotFoundException` — preventing d
 
 ---
 
----
-## Tech Stack
 
-Language Java 21  
-Framework Spring Boot 3.3  
+## Tech Stack
+Language Java 21 Framework    
+Spring Boot 3.3  
 Database PostgreSQL 16 + Flyway  
 ORM Spring Data JPA + Hibernate  
 Security Spring Security + JWT  
-Resilience Resilience4j(circuit breaker, retry, fallback)  
-Scheduler coordination ShedLock   
-Metrics Micrometer + Prometheus  
+Resilience Resilience4j(circuit breaker, retry, fallback)   
+Scheduler coordination ShedLock  
+Metrics Micrometer + Prometheus   
 Tracing Micrometer Tracing + OpenTelemetry → Grafana Tempo  
 Reverse proxy NGINX (DNS upstream discovery, rate limiting, TLS)  
 Load testing k6  
 API docs SpringDoc OpenAPI 3 / Swagger UI  
 Containerisation Docker + Docker Compose  
-Frontend Next.js 14 + TanStack Query + Tailwind CSS
----
+Frontend Next.js 14 + TanStack Query + Tailwind CSS  
+
 
 ## Getting Started
 
@@ -97,21 +96,21 @@ k6 run load-test.js
 ```
 ## API Reference
 
-Full interactive docs with Try-it-out: `https://localhost/swagger-ui/index.html`
+Full interactive docs with Try-it-out: `https://localhost/swagger-ui/index.html`  
 
-POST `/api/auth/register` — Register, returns JWT
-POST `/api/auth/login` — Login, returns JWT
-GET `/api/events` — List active events
-GET `/api/events/:id` — Event details
-GET `/api/events/:id/seats` — Live seating chart (polls every 15s in UI)
-POST `/api/holds` JWT Hold a seat (5 min TTL) 
-DELETE `/api/holds/:token` JWT Release hold early
-POST `/api/orders/checkout` JWT Pay + confirm 
-GET `/api/orders/me` JWT My order history
-GET `/api/orders/:id` JWT Single order
-POST `/api/admin/events` ADMIN Create event
-POST `/api/admin/seats` ADMIN Add seat to event
-POST `/api/admin/discounts` ADMIN Create discount code
-GET `/api/admin/discounts` ADMIN List all discount codes
-GET `/api/admin/orders` ADMIN All orders (all users)
+POST `/api/auth/register` — Register, returns JWT  
+POST `/api/auth/login` — Login, returns JWT  
+GET `/api/events` — List active events  
+GET `/api/events/:id` — Event details  
+GET `/api/events/:id/seats` — Live seating chart (polls every 15s in UI)  
+POST `/api/holds` JWT Hold a seat (5 min TTL)  
+DELETE `/api/holds/:token` JWT Release hold early  
+POST `/api/orders/checkout` JWT Pay + confirm  
+GET `/api/orders/me` JWT My order history  
+GET `/api/orders/:id` JWT Single order  
+POST `/api/admin/events` ADMIN Create event  
+POST `/api/admin/seats` ADMIN Add seat to event  
+POST `/api/admin/discounts` ADMIN Create discount code  
+GET `/api/admin/discounts` ADMIN List all discount codes  
+GET `/api/admin/orders` ADMIN All orders (all users)  
 GET `/api/metrics/summary` ADMIN Live business metrics snapshot
