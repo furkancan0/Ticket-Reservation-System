@@ -40,6 +40,13 @@ ticketing:
     ttl-minutes: 15
   scheduler:
     expiry-interval-ms: 30000   # every 30 seconds
+  rate-limit:
+    checkout:
+      requests-per-minute: 3    # POST /api/orders/checkout
+    hold:
+      requests-per-minute: 5    # POST /api/holds
+    general:
+      requests-per-minute: 60   # all other authenticated endpoints
 
 resilience4j:
   circuitbreaker:

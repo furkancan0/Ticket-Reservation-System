@@ -11,6 +11,7 @@ import com.ticketing.metrics.TicketingMetrics;
 import com.ticketing.payment.PaymentResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,6 @@ public class OrderTransactionService {
     private final TicketingMetrics             metrics;
 
     // Phase 1: hold + discount → PENDING order
-
     @Transactional(rollbackFor = Exception.class)
     public Order createPendingOrder(String holdToken, UUID userId, String discountCode) {
 
@@ -87,7 +87,7 @@ public class OrderTransactionService {
     }
 
     // Phase 2: finalize — update order + seat
-
+    @CacheEvict(value = "seats", allEntries = true)   // seat goes CONFIRMED or AVAILABLE
     @Transactional(rollbackFor = Exception.class)
     public Order finalizeOrder(UUID orderId, String providerName, PaymentResult result) {
 

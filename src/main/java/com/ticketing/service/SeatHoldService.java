@@ -18,6 +18,7 @@ import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ public class SeatHoldService {
             name            = "seat.hold",
             contextualName  = "seat.hold.acquire"
     )
+    @CacheEvict(value = "seats", allEntries = true)   // seat status changed PENDING
     @Transactional
     public SeatHoldResponse holdSeat(UUID seatId, UUID userId) {
         // Idempotency: return existing active hold if present
@@ -135,6 +137,7 @@ public class SeatHoldService {
     }
 
     @Transactional
+    @CacheEvict(value = "seats", allEntries = true)   // seat status changed AVAILABLE
     public void expireHold(SeatHold hold) {
         hold.setExpired(true);
         seatHoldRepository.save(hold);

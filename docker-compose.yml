@@ -5,10 +5,10 @@ x-app-env: &app-env
   SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ticketing_db
   SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
   SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
-  JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars!!}
-  STRIPE_API_KEY: ${STRIPE_API_KEY:-sk_test_placeholder}
-  PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-placeholder}
-  PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-placeholder}
+  JWT_SECRET: ${JWT_SECRET}
+  STRIPE_API_KEY: ${STRIPE_API_KEY}
+  PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+  PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
   SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
 
 x-app-healthcheck: &app-healthcheck
@@ -66,7 +66,7 @@ services:
     healthcheck: *app-healthcheck
     deploy:
       resources: *app-resources
-      replicas: 2
+      replicas: 1
     expose:
       - "8080"
     networks:

@@ -7,20 +7,22 @@ A production-grade ticket booking backend built with **Java 21**, **Spring Boot 
 ## Architecture
 
 ```
-                      ┌──────────────────────────────────┐
+                      ┌──────────────────────────────────┐                                
                       │         Client / Next.js         │
                       └──────────────┬───────────────────┘
                                      │ HTTPS :443
                       ┌──────────────▼───────────────────┐
-                      │         NGINX (load balancer)    │
-                     │ 200r/s API · 20r/s auth · least_conn│
-                      │                                   │
+                    │         NGINX (load balancer)        │
+                    │ 200r/s API · 20r/s auth · least_conn │
+                    │JWT present? hash($http_authorization)│
                       └──────┬───────────────┬────────────┘
                              │               │
               ┌──────────────▼──┐     ┌──────▼──────────┐
+              │  Instance 1     │     │  Instance 2     │
               │  Spring Boot    │     │  Spring Boot    │  ← --scale app=N
               │  app:8080       │     │  app:8080       │
               │  actuator:8081  │     │  actuator:8081  │
+              │  Caffeine cache │     │  Caffeine cache │
               └──────┬──────────┘     └──────┬──────────┘
                      └──────────┬────────────┘
                       ┌─────────▼──────────────┐
@@ -45,7 +47,6 @@ The hold is expired **atomically in TX 1**. Once a PENDING order exists for a ho
 replaying the same token always returns `HoldNotFoundException` — preventing double-charges on network retries.
 
 ---
-
 ---
 ## Tech Stack
 
@@ -56,6 +57,8 @@ ORM Spring Data JPA + Hibernate
 Security Spring Security + JWT  
 Resilience Resilience4j(circuit breaker, retry, fallback)  
 Scheduler coordination ShedLock   
+Rate limiting (Bucket4j)
+Caffeine cache
 Metrics Micrometer + Prometheus  
 Tracing Micrometer Tracing + OpenTelemetry → Grafana Tempo  
 Reverse proxy NGINX (DNS upstream discovery, rate limiting, TLS)  
@@ -72,8 +75,16 @@ Frontend Next.js 14 + TanStack Query + Tailwind CSS
 - Docker Desktop
 - k6 for load testing: `brew install k6` / `choco install k6`
 
-
 ### Start
+
+### Configure
+.env file
+```
+#.env:
+#   JWT_SECRET — any 32+ character random string (required)
+#   STRIPE_API_KEY — your stripe api key
+#   GRAFANA_PASSWORD — change from default "admin"
+```
 
 ```bash
 # Full stack (NGINX + 2 app replicas + Prometheus + Tempo + Grafana)
@@ -97,7 +108,7 @@ k6 run load-test.js
 ```
 ## API Reference
 
-Full interactive docs with Try-it-out: `https://localhost/swagger-ui/index.html`
+Full interactive docs with: `https://localhost/swagger-ui/index.html`
 
 POST `/api/auth/register` — Register, returns JWT
 POST `/api/auth/login` — Login, returns JWT
