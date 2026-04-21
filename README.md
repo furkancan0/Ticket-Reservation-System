@@ -48,8 +48,7 @@ replaying the same token always returns `HoldNotFoundException` — preventing d
 
 ---
 ---
-## Tech Stack
-
+## Tech Stack  
 Language Java 21 Framework Spring Boot  
 3.3 Database PostgreSQL 16 + Flyway ORM  
 Spring Data JPA + Hibernate  
@@ -64,6 +63,7 @@ Reverse proxy NGINX (DNS upstream discovery, rate limiting, TLS)
 Load testing k6 API docs SpringDoc OpenAPI 3 / Swagger UI   
 Containerisation Docker + Docker Compose   
 Frontend Next.js 14 + TanStack Query + Tailwind CSS  
+
 ---
 
 ## Getting Started
