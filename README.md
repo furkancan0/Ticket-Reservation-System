@@ -49,8 +49,8 @@ replaying the same token always returns `HoldNotFoundException` — preventing d
 ---
 ---
 ## Tech Stack  
-Language Java 21 Framework Spring Boot  
-3.3 Database PostgreSQL 16 + Flyway ORM  
+Language Java 21 Framework Spring Boot 3.3  
+Database PostgreSQL 16 + Flyway ORM  
 Spring Data JPA + Hibernate  
 Security Spring Security + JWT   
 Resilience Resilience4j(circuit breaker, retry, fallback)  
