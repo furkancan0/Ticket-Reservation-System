@@ -96,8 +96,6 @@ k6 run smoke-test.js
 k6 run load-test.js
 
 ```
-<img width="1417" height="921" alt="latest-load-test" src="https://github.com/user-attachments/assets/151fa095-5e7c-45b8-8da3-0b2a5a4234c4" />
-
 
 
 ## Tech Stack
